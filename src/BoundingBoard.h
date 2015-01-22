@@ -14,6 +14,9 @@ public:
 	void drawSelf();
 	bool isColliding(GenericCollidingChip);
 
+	float getHeight();
+	float getWidth();
+
 };
 
 

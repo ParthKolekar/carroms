@@ -99,7 +99,13 @@ void Pocket::drawSelf() {
 }
 
 bool Pocket::isFullyEncompassing(GenericCollidingChip chip) {
-	return false;
+	// Assumption made that Pocket is > chip. (As it should be.). Do you even expect a fair game otherwise? :P
+	float xx = chip.getPositionX() - this->positionX;
+	float yy = chip.getPositionY() - this->positionY;
+	float len = xx * xx + yy * yy;
+	float xxx = this->radius - chip.getRadius();
+	float len2 = xxx * xxx;
+	return len <= len2;
 }
 
 #endif

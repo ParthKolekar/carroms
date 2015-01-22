@@ -2,7 +2,6 @@
 #define _GENERIC_COLLIDING_CPP
 
 #include "GenericCollidingChip.h"
-#include <cmath>
 
 GenericCollidingChip::GenericCollidingChip() {
 	this->radius = 0;
@@ -23,8 +22,10 @@ float GenericCollidingChip::getRadius() {
 bool GenericCollidingChip::isColliding(GenericCollidingChip chip) { 
 	float xx = this->positionX - chip.getPositionX();
 	float yy = this->positionY - chip.getPositionY();
-	float distance = sqrt((xx*xx) + (yy*yy));
-	return distance < this->radius + chip.getRadius();
+	float d = (xx*xx) + (yy*yy);
+	float dd = this->radius + chip.getRadius();
+	float ddd = dd * dd;
+	return d < ddd;
 }
 
 #endif

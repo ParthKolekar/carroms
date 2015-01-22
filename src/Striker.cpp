@@ -5,43 +5,49 @@
 #include <GL/glut.h>
 #include <cmath>
 
-
 Striker::Striker() {
-	this->deltaX_next = 0;
-	this->deltaY_next = 0;
 	this->radius = 0.22;
 	this->positionX = 0;
 	this->positionY = -10/2.75;
+	this->mass = 1;
+	this->angle = 90;
+	this->power = 0.3;
+	this->fired = false;
 }
 
 Striker::~Striker() {
 
 }
 
-float Striker::getDeltaXNext() {
-	return this->deltaX_next;
-}
+void Striker::reset() {
+	this->deltaX = 0;
+	this->deltaY = 0;
+	this->positionX = 0;
+	this->positionY = -10/2.75;
+	this->angle = 90;
+	this->power = 0.3;
+	this->fired = false;
 
-float Striker::getDeltaYNext() {
-	return this->deltaY_next;
-}
-
-void Striker::setDeltaNext(float deltaX, float deltaY) {
-	this->deltaX_next = deltaX;
-	this->deltaY_next = deltaY;
 }
 
 void Striker::fire() {
-	this->deltaX = this->deltaX_next;
-	this->deltaX_next = 0;
-	this->deltaY = this->deltaY_next;
-	this->deltaY_next = 0;
+	if (!this->fired) {
+		this->deltaX = this->power * cos(M_PI * this->angle / 180);
+		this->deltaY = this->power * sin(M_PI * this->angle / 180);
+		this->power = 0;
+		this->angle = 90;
+		this->fired = true;
+	}
+}
+
+bool Striker::isFired() {
+	return this->fired;
 }
 
 void Striker::drawSelf() {
 	glPushMatrix();
 	glTranslatef(this->positionX , this->positionY , 0);
-	glColor4f(0.7,0.4,0.8,1);
+	glColor4f(0.7,0.4,0.8,0.25);
 	glBegin(GL_TRIANGLE_FAN);
 	for (int i = 0 ; i < 360 ; i++) {
 		glVertex2f(this->radius * cos(M_PI * i / 180) , this->radius * sin(M_PI * i / 180));
@@ -59,7 +65,44 @@ void Striker::drawSelf() {
 		glVertex2f((this->radius + 0.01) * cos(M_PI * i / 180) , (this->radius + 0.01) * sin(M_PI * i / 180));
 	}
 	glEnd();
+	this->drawPowerArrow();
 	glPopMatrix();
+}
+
+void Striker::drawPowerArrow() {
+	glColor4f(1,1,1,0.25);
+	glBegin(GL_LINES);
+	glVertex2f(0,0);
+	glVertex2f(this->power*cos(M_PI * this->angle / 180) * 10 , this->power*sin(M_PI * this->angle / 180) * 10);
+	glEnd();
+	glColor4f(0.7,0.2,0.2,0.7);
+	glBegin(GL_LINES);
+	glVertex2f(0,0);
+	glVertex2f(0.0001 + this->power*cos(M_PI * this->angle / 180) * 10 , 0.0001 + this->power*sin(M_PI * this->angle / 180) * 10);
+	glEnd();
+	glColor4f(0.7,0.2,0.2,0.7);
+	glBegin(GL_LINES);
+	glVertex2f(0,0);
+	glVertex2f(-0.0001 + this->power*cos(M_PI * this->angle / 180) * 10 , -0.0001 + this->power*sin(M_PI * this->angle / 180) * 10);
+	glEnd();
+}
+
+void Striker::setAngle(int angle) {
+	if (this->angle + angle <= 175 and this->angle + angle >= 5) {
+		this->angle += angle;
+	}
+}
+
+void Striker::setPower(float power) {
+	if (this->power + power <= 0.5 and this->power + power >= 0.01) {
+		this->power += power;
+	}
+}
+
+void Striker::updatePositionX(float positionX) {
+	if (this->positionX + positionX <= 10/2.75 and this->positionX + positionX >= -10/2.75 and !this->isFired()) {
+		this->positionX += positionX;
+	}
 }
 
 #endif

@@ -4,140 +4,331 @@ BoundingBoard *board;
 Striker *striker;
 std::array<Pocket *, 4> pockets;
 std::vector<Coin *> coins;
+Player *player;
+int STATE;
+bool win = false;
+bool lost = false;
 
 void initItems() {
-    board = new BoundingBoard();
-    striker = new Striker();
-    pockets[0] = new Pocket(1,5,5);
-    pockets[1] = new Pocket(4,-5,5);
-    pockets[2] = new Pocket(3,-5,-5);
-    pockets[3] = new Pocket(2,5,-5);
+	STATE = 0;
+	board = new BoundingBoard();
+	striker = new Striker();
+	player = new Player();
+	pockets[0] = new Pocket(1,5,5);
+	pockets[1] = new Pocket(4,-5,5);
+	pockets[2] = new Pocket(3,-5,-5);
+	pockets[3] = new Pocket(2,5,-5);
+	coins.push_back(new Coin(2,0,0));
+    for(int i = 22 , j = 0 ; i < 385 ; i += 40 , j=j^1 ) {
+        coins.push_back(new Coin(j, 0.5 * cos ( M_PI * i / 180),  0.5 * sin ( M_PI * i / 180)));
+    }
+}
+
+void handleWallCollision(GenericCollidingChip *chip) {
+	float xx = fabs(chip->getDeltaX()) * sqrt(E);
+	float yy = fabs(chip->getDeltaY()) * sqrt(E);
+	if ((chip->getPositionX() + chip->getRadius()) > (board->getWidth() / 2)) {
+		chip->setDeltaX(-xx);
+	}
+    if ((chip->getPositionX() - chip->getRadius()) < -(board->getWidth() / 2)) {
+    	chip->setDeltaX(xx);
+    }
+    if ((chip->getPositionY() + chip->getRadius()) > (board->getHeight() / 2)) {
+    	chip->setDeltaY(-yy);
+    }
+    if ((chip->getPositionY() - chip->getRadius()) < -(board->getHeight() / 2)) {
+    	chip->setDeltaY(yy);
+    }
+}
+
+void handlePocketEncompassing(Coin *coin) {
+	coin->pocketSelf();
+	player->updateScore(coin->getScore());
+}
+
+void handleChipCollision(GenericCollidingChip *first , GenericCollidingChip *second) {
+	double m21,dvx2,a,x21,y21,vx21,vy21,fy21,vx_cm,vy_cm;
+	m21=second->getMass()/first->getMass();
+	x21=second->getPositionX()-first->getPositionX();
+	y21=second->getPositionY()-first->getPositionY();
+	vx21=second->getDeltaX()-first->getDeltaX();
+	vy21=second->getDeltaY()-first->getDeltaY();
+
+	vx_cm = (first->getMass()*first->getDeltaX()+second->getMass()*second->getDeltaX())/(first->getMass()+second->getMass());
+	vy_cm = (first->getMass()*first->getDeltaY()+second->getMass()*second->getDeltaY())/(first->getMass()+second->getMass());
+
+	if ( (vx21*x21 + vy21*y21) >= 0) 
+		return;
+
+
+	fy21=1.0E-12*fabs(y21);
+
+	if ( fabs(x21)<fy21 ) {  
+		int sign;
+		if (x21<0) { 
+			sign=-1; 
+		} else { 
+			sign=1;
+		}  
+		x21=fy21*sign; 
+	} 
+
+	a=y21/x21;
+	dvx2= -2*(vx21 +a*vy21)/((1+a*a)*(1+m21));
+	float vx2=second->getDeltaX()+dvx2;
+	float vy2=second->getDeltaY()+a*dvx2;
+	float vx1=first->getDeltaX()-m21*dvx2;
+	float vy1=first->getDeltaY()-a*m21*dvx2;
+
+	vx1=(vx1-vx_cm)*E + vx_cm;
+	vy1=(vy1-vy_cm)*E + vy_cm;
+	vx2=(vx2-vx_cm)*E + vx_cm;
+	vy2=(vy2-vy_cm)*E + vy_cm;
+
+	first->setDelta(vx1,vy1);
+	second->setDelta(vx2,vy2);
+  
+	return;
+}
+
+void handleFriction(GenericCollidingChip *chip) {
+	float vx = chip->getDeltaX() * MuMg;
+	float vy = chip->getDeltaY() * MuMg;
+	chip->setDelta(vx,vy);
 }
 
 void cleanUpItems() {
-    delete board;
-    delete striker;
-    for (auto i = pockets.begin(); i != pockets.end(); ++i) {
-        delete *i;
-    }
-    for (auto i = coins.begin(); i != coins.end(); ++i) {
-        delete *i;
-    }
+	delete board;
+	delete striker;
+	for (auto i = pockets.begin(); i != pockets.end(); ++i) {
+		delete *i;
+	}
+	for (auto i = coins.begin(); i != coins.end(); ++i) {
+		delete *i;
+	}
 }
 
 void update(int value) {
+	bool flag = true;
+	for (auto i = coins.begin(); i != coins.end(); ++i) {
+		if (board->isColliding(**i))
+			handleWallCollision(*i);
+		if (striker->isColliding(**i))
+			handleChipCollision(striker,*i);
+		for (auto j = i + 1; j != coins.end(); ++j) {
+			if ((*i)->isColliding(**j)) 
+				handleChipCollision(*i,*j);
+		}
+		handleFriction(*i);
+		for (auto j = pockets.begin(); j != pockets.end(); ++j) {
+			if ((*j)->isFullyEncompassing(**i)) {
+				handlePocketEncompassing(*i);
+			}
+		}
+		if (!(*i)->isStopped()) {
+			flag = false;
+			continue;
+		}
+		if (!(*i)->isPocketed() and (*i)->getType() != 1) {
+			continue;
+		}
+	}
+	if (board->isColliding(*striker)) {
+		handleWallCollision(striker);
+	}
+	handleFriction(striker);
+	for (auto i = pockets.begin(); i != pockets.end(); ++i) {
+		if ((*i)->isFullyEncompassing(*striker)) {
+			striker->reset();
+			player->updateScore(-5);
+		}
+	}
+	if (!(striker->isStopped())) {
+		flag = false;
+	}
+	striker->moveNext();
+	for (auto i = coins.begin(); i != coins.end(); ++i) {
+		(*i)->moveNext();
+	}
+	if (flag and striker->isFired()) {
+		striker->reset();
+	}
 
-    if (board->isColliding(*striker))
-        std::cerr << "touch";
-
-//TODO: Handle Collisions here
-    striker->moveNext();
-    for (auto i = coins.begin(); i != coins.end(); ++i) {
-        (*i)->moveNext();
-    }
-
-    glutTimerFunc(1, update, 0);
+	if (player->getScore() <= 0) {
+		lost = true;
+		drawLostScreen();
+	} else { 
+		glutTimerFunc(1, update, value + 1);
+	}
 }
+
+void drawScoreBoard() {
+	glPushMatrix();
+	std::string st = "Score : \n" + std::to_string(player->getScore());
+	glColor4f(1,1,1,1);
+	glRasterPos3f(7.5,-5,-14);
+	for (auto i = st.cbegin() ; i != st.cend() ; ++i) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *i);
+	}
+	glPopMatrix();
+}
+
+void drawLostScreen() {
+	glPushMatrix();
+	std::string st = "You Have Fallen";
+	glColor4f(1,1,1,1);
+	glRasterPos3f(0,0,-14);
+	for (auto i = st.cbegin() ; i != st.cend() ; ++i) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *i);
+	}
+	glPopMatrix();
+}
+
 
 // Function to draw objects on the screen
 void drawScene() {
-    glClearColor(0.035,0.035,0.035,1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glPushMatrix();
-    glTranslatef(0, 0, -15);
+	glClearColor(0.035,0.035,0.035,1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glPushMatrix();
+	glTranslatef(0, 0, -15);
 
-    board->drawSelf();
-    
-    for (auto i = pockets.begin(); i != pockets.end(); ++i) {
-        (*i)->drawSelf();
-    }
+	board->drawSelf();
+	
+	for (auto i = pockets.begin(); i != pockets.end(); ++i) {
+		(*i)->drawSelf();
+	}
 
-    striker->drawSelf();
+	striker->drawSelf();
 
-    for (auto i = coins.begin(); i != coins.end(); ++i) {
-        (*i)->drawSelf();
-    }
+	for (auto i = coins.begin(); i != coins.end(); ++i) {
+		(*i)->drawSelf();
+	}
 
-
-    glPopMatrix();
-    glutSwapBuffers();
+	glPopMatrix();
+	drawScoreBoard();
+	glutSwapBuffers();
 }
 
 // Initializing some openGL 3D rendering options
 void initRendering() {
-    glEnable(GL_DEPTH_TEST);        // Enable objects to be drawn ahead/behind one another
-    glEnable(GL_COLOR_MATERIAL);    // Enable coloring
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_DEPTH_TEST);        // Enable objects to be drawn ahead/behind one another
+	glEnable(GL_COLOR_MATERIAL);    // Enable coloring
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable( GL_LINE_SMOOTH );
+	glEnable( GL_POLYGON_SMOOTH );
+	glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
+	glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
+	glLineWidth(1.4);
 }
 
 // Function called when the window is resized
 void handleResize(int w, int h) {
-    glViewport(0, 0, w, h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45.0f, (float)w / (float)h, 0.1f, 200.0f);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0f, (float)w / (float)h, 0.1f, 200.0f);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 }
 
 void handleKeypress(unsigned char key, int x, int y) {
-    if (key == 27) {
-        cleanUpItems();
-        exit(0);     // escape key is pressed
-    }
+	if (key == ' ' or key == 'w' or key == 'W') {
+		striker->fire();
+	}
+
+	if (key == 'a' or key == 'A') {
+		striker->setAngle(1);
+	}
+	
+	if (key == 'c' or key == 'C') {
+		striker->setAngle(-1);
+	}
+
+	if ((key == 'r' or key == 'R') and (!lost or !win)) {
+		cleanUpItems();
+		initItems();
+	}
+
+	if (key == 27) {
+		cleanUpItems();
+		exit(0);     // escape key is pressed
+	}
 }
 
 void handleSpecialKeypress(int key, int x, int y) {
-    if (key == GLUT_KEY_UP) {
-        striker->setDelta(0,0.01);
-    }
-    if (key == GLUT_KEY_DOWN) {
-        striker->setDeltaNext(0,-0.01);
-    }
-    if (key == GLUT_KEY_LEFT) {
-        striker->setDeltaNext(-0.01,0);
-    }
-    if (key == GLUT_KEY_RIGHT) {
-        striker->setDeltaNext(0.01,0);
-    }
+	if (key == GLUT_KEY_UP) {
+		striker->setPower(0.01);
+	}
+	if (key == GLUT_KEY_DOWN) {
+		striker->setPower(-0.01);
+	}
+	if (key == GLUT_KEY_LEFT) {
+		for (auto i = coins.begin(); i != coins.end() ; ++i) {
+			while (striker->isColliding(**i)) {
+				striker->updatePositionX(-0.1);		
+			}
+		}
+		striker->updatePositionX(-0.1);
+	}
+	if (key == GLUT_KEY_RIGHT) {
+		for (auto i = coins.begin(); i != coins.end() ; ++i) {
+			while (striker->isColliding(**i)) {
+				striker->updatePositionX(0.1);
+			}
+		}
+		striker->updatePositionX(0.1);
+	}
 }
 
 void handleMouseclick(int button, int state, int x, int y) {
 }
 
+void timer_start(std::function<void(void)> func, unsigned int interval) {
+    std::thread([func, interval]() {
+        while (true) {
+            func();
+            std::this_thread::sleep_for(std::chrono::milliseconds(interval));
+        }
+    }).detach();
+}
+
+
+void decrementScore() {
+    player->setScore(player->getScore() - 1);
+}
+
 int main(int argc, char **argv) {
-    initItems();
+	initItems();
 
-    // Initialize GLUT
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+	// Initialize GLUT
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 
-    int w = glutGet(GLUT_SCREEN_WIDTH);
-    int h = glutGet(GLUT_SCREEN_HEIGHT);
-    int windowWidth = w * 2 / 3;
-    int windowHeight = h * 2 / 3;
+	int w = glutGet(GLUT_SCREEN_WIDTH);
+	int h = glutGet(GLUT_SCREEN_HEIGHT);
+	int windowWidth = w * 2 / 3;
+	int windowHeight = h * 2 / 3;
 
-    glutInitWindowSize(windowWidth, windowHeight);
-    glutInitWindowPosition((w - windowWidth) / 2, (h - windowHeight) / 2);
+	glutInitWindowSize(windowWidth, windowHeight);
+	glutInitWindowPosition((w - windowWidth) / 2, (h - windowHeight) / 2);
 
-    glutCreateWindow("Carrom");  // Setup the window
-    initRendering();
+	glutCreateWindow("Carrom");  // Setup the window
+	initRendering();
 
-    // Register callbacks
-    glutDisplayFunc(drawScene);
-    glutIdleFunc(drawScene);
-    glutKeyboardFunc(handleKeypress);
-    glutSpecialFunc(handleSpecialKeypress);
-    glutMouseFunc(handleMouseclick);
-    glutReshapeFunc(handleResize);
-    glutTimerFunc(1, update, 0);
+	// Register callbacks
+	glutDisplayFunc(drawScene);
+	glutIdleFunc(drawScene);
+	glutKeyboardFunc(handleKeypress);
+	glutSpecialFunc(handleSpecialKeypress);
+	glutMouseFunc(handleMouseclick);
+	glutReshapeFunc(handleResize);
+	glutTimerFunc(1, update, 0);
+	timer_start(decrementScore,5000);
+	glutMainLoop();
 
-    glutMainLoop();
-
-    cleanUpItems();
-    return 0;
+	cleanUpItems();
+	return 0;
 }

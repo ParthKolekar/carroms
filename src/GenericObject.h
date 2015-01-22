@@ -19,7 +19,7 @@ public:
 	void setPositionY(float);
 	void setDeltaX(float);
 	void setDeltaY(float);
-	void stopObject();
+	void stopSelf();
 	void setPosition(float,float);
 	void setDelta(float,float);
 	void setMass(float);
@@ -29,6 +29,7 @@ public:
 	float getDeltaX();
 	float getDeltaY();
 	float getMass();
+	float getDeltaMagnitude();
 
 	float getNextPositionX();
 	float getNextPositionY();
@@ -36,6 +37,7 @@ public:
 	void moveNext();
 
 	void updateDeltaBy(float, float);
+	bool isStopped();
 };
 
 #endif

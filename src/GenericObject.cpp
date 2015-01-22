@@ -10,7 +10,7 @@ GenericObject::GenericObject () {
 	this->positionY = 0;
 	this->deltaX = 0;
 	this->deltaY = 0;
-	this->mass = 1e10;
+	this->mass = 10e1;
 }
 
 GenericObject::~GenericObject() {
@@ -33,9 +33,16 @@ void GenericObject::setDeltaY(float delta) {
 	this->deltaY = delta;
 }
 
-void GenericObject::stopObject() {
+void GenericObject::stopSelf() {
 	this->deltaX = 0;
 	this->deltaY = 0;
+}
+
+float GenericObject::getDeltaMagnitude() {
+	float x = this->deltaX;
+	float y = this->deltaY;
+
+	return sqrt(x*x + y*y);
 }
 
 void GenericObject::setPosition(float positionX, float positionY) {
@@ -73,8 +80,16 @@ float GenericObject::getNextPositionY() {
 }
 
 void GenericObject::moveNext() {
-	this->positionX = this->positionX + this->deltaX;
-	this->positionY = this->positionY + this->deltaY;
+	if (this->getDeltaMagnitude() >= 10e-4) {
+		this->positionX = this->positionX + this->deltaX;
+		this->positionY = this->positionY + this->deltaY;
+	} else {
+		this->stopSelf();
+	}
+}
+
+bool GenericObject::isStopped() {
+	return this->getDeltaMagnitude() <= 10e-4;
 }
 
 void GenericObject::setMass(float mass) {

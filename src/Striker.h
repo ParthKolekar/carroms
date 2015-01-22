@@ -5,19 +5,24 @@
 
 class Striker : public GenericCollidingChip
 {
-	float deltaX_next;
-	float deltaY_next;
+	float power;
+	float angle;
+	bool fired;
 public:
 	Striker();
 	~Striker();
 
 	void drawSelf();
+	void drawPowerArrow();
 
-	float getDeltaXNext();
-	float getDeltaYNext();
-
-	void setDeltaNext(float, float);
+	void setPower(float);
+	void setAngle(int);
+	
 	void fire();
+	void reset();
+
+	bool isFired();
+	void updatePositionX(float);
 };
 
 #endif

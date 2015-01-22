@@ -6,12 +6,20 @@
 class Coin : public GenericCollidingChip
 {
 	int type;
+	bool pocketed;
 public:
 	Coin();
 	~Coin();
+	Coin(int,float, float);
 
-	void drawSelf();
+	void setType(int);
+	int getType();
 	
+	void drawSelf();
+	int getScore();
+
+	bool isPocketed();
+	void pocketSelf();
 };
 
 #endif

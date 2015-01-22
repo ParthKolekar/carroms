@@ -14,6 +14,13 @@ BoundingBoard::~BoundingBoard () {
 
 }
 
+float BoundingBoard::getHeight() {
+    return this->height;
+}
+float BoundingBoard::getWidth() {
+    return this->width;
+}
+
 void BoundingBoard::drawSelf() {
 	glPushMatrix();
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -27,17 +34,17 @@ void BoundingBoard::drawSelf() {
     glEnd();
     glColor4f(0.3,0.3,0.9,0.7); // Outer
     glBegin(GL_QUADS);
-    glVertex2f(-width/2 - 0.02, -height/2 - 0.02); 
-    glVertex2f(width/2 + 0.02, -height/2 - 0.02); 
-    glVertex2f(width/2 + 0.02, height/2 + 0.02); 
-    glVertex2f(-width/2 - 0.02, height/2 + 0.02); 
+    glVertex2f(-width/2 - 0.01, -height/2 - 0.01); 
+    glVertex2f(width/2 + 0.01, -height/2 - 0.01); 
+    glVertex2f(width/2 + 0.01, height/2 + 0.01); 
+    glVertex2f(-width/2 - 0.01, height/2 + 0.01); 
     glEnd();
     glColor4f(0.5,0.5,0.9,0.7); // Inner
     glBegin(GL_QUADS);
-    glVertex2f(-width/2 + 0.02, -height/2 + 0.02); 
-    glVertex2f(width/2 - 0.02, -height/2 + 0.02); 
-    glVertex2f(width/2 - 0.02, height/2 - 0.02); 
-    glVertex2f(-width/2 + 0.02, height/2 - 0.02); 
+    glVertex2f(-width/2 + 0.01, -height/2 + 0.01); 
+    glVertex2f(width/2 - 0.01, -height/2 + 0.01); 
+    glVertex2f(width/2 - 0.01, height/2 - 0.01); 
+    glVertex2f(-width/2 + 0.01, height/2 - 0.01); 
     glEnd();
 
     glColor4f(1,1,1,1);
@@ -49,17 +56,17 @@ void BoundingBoard::drawSelf() {
     glEnd();
     glColor4f(0.9,0.3,0.3,0.7);
     glBegin(GL_QUADS);
-    glVertex2f(-width/2.75 - 0.02, -height/2.75 - 0.02); 
-    glVertex2f(width/2.75 + 0.02, -height/2.75 - 0.02); 
-    glVertex2f(width/2.75 + 0.02, height/2.75 + 0.02); 
-    glVertex2f(-width/2.75 - 0.02, height/2.75 + 0.02); 
+    glVertex2f(-width/2.75 - 0.01, -height/2.75 - 0.01); 
+    glVertex2f(width/2.75 + 0.01, -height/2.75 - 0.01); 
+    glVertex2f(width/2.75 + 0.01, height/2.75 + 0.01); 
+    glVertex2f(-width/2.75 - 0.01, height/2.75 + 0.01); 
     glEnd();
     glColor4f(0.9,0.5,0.5,0.7);
     glBegin(GL_QUADS);
-    glVertex2f(-width/2.75 + 0.02, -height/2.75 + 0.02); 
-    glVertex2f(width/2.75 - 0.02, -height/2.75 + 0.02); 
-    glVertex2f(width/2.75 - 0.02, height/2.75 - 0.02); 
-    glVertex2f(-width/2.75 + 0.02, height/2.75 - 0.02); 
+    glVertex2f(-width/2.75 + 0.01, -height/2.75 + 0.01); 
+    glVertex2f(width/2.75 - 0.01, -height/2.75 + 0.01); 
+    glVertex2f(width/2.75 - 0.01, height/2.75 - 0.01); 
+    glVertex2f(-width/2.75 + 0.01, height/2.75 - 0.01); 
     glEnd();
     
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
