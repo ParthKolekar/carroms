@@ -1,7 +1,7 @@
 OBJ = carrom
 MAN = carrom.1
 override CFLAGS += -Ofast -funroll-loops -flto -Wall -std=c++11
-override DEVEL_FLAGS += -g -Wall -Wextra -pedantic-errors -std=c++11
+override DEVEL_FLAGS += -g -Wall -Wextra -pedantic-errors -std=c++11 
 override LFLAGS += -lglut -lGL -lGLU
 CC = g++
 PREFIX ?= /usr/local

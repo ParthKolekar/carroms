@@ -17,12 +17,16 @@ public:
 
 	void setPower(float);
 	void setAngle(int);
+
+	void updatePower(float);
+	void updateAngle(int);
 	
 	void fire();
 	void reset();
 
 	bool isFired();
 	void updatePositionX(float);
+	void setPositionX(float);
 };
 
 #endif

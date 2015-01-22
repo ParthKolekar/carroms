@@ -22,11 +22,26 @@ extern std::vector<Coin *> coins;
 extern Player *player;
 
 
-#ifndef E
-#define E 0.8
+#ifndef RESTITUTION_CONSTANT
+#define RESTITUTION_CONSTANT 0.8
 #endif
 
-#ifndef MuMg
-#define MuMg 0.99
+#ifndef LINEAR_FRICTIONAL_EFFECT
+#define LINEAR_FRICTIONAL_EFFECT 0.99
 #endif
 
+#ifndef COINS_COUNT
+#define COINS_COUNT 10
+#endif
+
+#ifndef BOARD_HEIGHT
+#define BOARD_HEIGHT 10
+#endif
+
+#ifndef BOARD_WIDTH
+#define BOARD_WIDTH 10
+#endif
+
+#ifndef SPACING_RADIUS
+#define SPACING_RADIUS 0.5
+#endif

@@ -87,21 +87,39 @@ void Striker::drawPowerArrow() {
 	glEnd();
 }
 
-void Striker::setAngle(int angle) {
+void Striker::updateAngle(int angle) {
 	if (this->angle + angle <= 175 and this->angle + angle >= 5) {
 		this->angle += angle;
 	}
 }
 
-void Striker::setPower(float power) {
-	if (this->power + power <= 0.5 and this->power + power >= 0.01) {
+void Striker::updatePower(float power) {
+	if (this->power + power <= 0.25 and this->power + power >= 0.01) {
 		this->power += power;
+	}
+}
+
+void Striker::setAngle(int angle) {
+	if (angle <= 175 and angle >= 5) {
+		this->angle = angle;
+	}
+}
+
+void Striker::setPower(float power) {
+	if (power < 0.25 and this->power >= 0.01) {
+		this->power = power;
 	}
 }
 
 void Striker::updatePositionX(float positionX) {
 	if (this->positionX + positionX <= 10/2.75 and this->positionX + positionX >= -10/2.75 and !this->isFired()) {
 		this->positionX += positionX;
+	}
+}
+
+void Striker::setPositionX(float positionX) {
+	if (positionX <= 10/2.75 and positionX >= -10/2.75 and !this->isFired()) {
+		this->positionX = positionX;
 	}
 }
 

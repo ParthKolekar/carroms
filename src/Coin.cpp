@@ -6,6 +6,7 @@
 #include <cmath>
 
 extern int STATE;
+extern int CORRECT_STATE;
 
 // 0 - black;
 // 1 - white;
@@ -48,6 +49,9 @@ void Coin::pocketSelf() {
 	this->setPosition(8 + this->type, -4 + (STATE * 0.5));
 	this->pocketed = true;
 	STATE = STATE + 1;
+	if (this->type == 0) {
+		CORRECT_STATE = CORRECT_STATE + 1;
+	}
 }
 
 void Coin::drawSelf() {

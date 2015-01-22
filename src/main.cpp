@@ -6,37 +6,61 @@ std::array<Pocket *, 4> pockets;
 std::vector<Coin *> coins;
 Player *player;
 int STATE;
+int CORRECT_STATE;
+bool ended;
+bool won;
+bool lost;
+bool moveStriker = false;
+bool releaseStriker = false;
 
 void initItems() {
+	ended = won = lost = false;
 	STATE = 0;
+	CORRECT_STATE = 0;
 	board = new BoundingBoard();
 	striker = new Striker();
 	player = new Player();
-	pockets[0] = new Pocket(1,5,5);
-	pockets[1] = new Pocket(4,-5,5);
-	pockets[2] = new Pocket(3,-5,-5);
-	pockets[3] = new Pocket(2,5,-5);
+	pockets[0] = new Pocket(1,BOARD_WIDTH/2,BOARD_HEIGHT/2);
+	pockets[1] = new Pocket(4,-BOARD_WIDTH/2,BOARD_HEIGHT/2);
+	pockets[2] = new Pocket(3,-BOARD_WIDTH/2,-BOARD_HEIGHT/2);
+	pockets[3] = new Pocket(2,BOARD_WIDTH/2,-BOARD_HEIGHT/2);
 	coins.push_back(new Coin(2,0,0));
-    for(int i = 22 , j = 0 ; i < 385 ; i += 40 , j=j^1 ) {
-        coins.push_back(new Coin(j, 0.5 * cos ( M_PI * i / 180),  0.5 * sin ( M_PI * i / 180)));
-    }
+	for(int i = 0 , j = 0 ; i <= 360 ; i += (360 / COINS_COUNT) , j=j^1 ) {
+		coins.push_back(new Coin(j, SPACING_RADIUS * cos ( M_PI * i / 180),  SPACING_RADIUS * sin ( M_PI * i / 180)));
+	}
+}
+
+void refreshItems() {
+	ended = won = lost = false;
+	STATE = 0;
+	CORRECT_STATE = 0;
+	striker->reset();
+	for (auto i = coins.begin(); i != coins.end(); ++i) {
+		delete *i;
+	}
+	coins.clear();
+	coins.push_back(new Coin(2,0,0));
+	for(int i = 0 , j = 0 ; i <= 360 ; i += (360 / COINS_COUNT) , j=j^1 ) {
+		coins.push_back(new Coin(j, SPACING_RADIUS * cos ( M_PI * i / 180),  SPACING_RADIUS * sin ( M_PI * i / 180)));
+	}
+	player->setScore(30);
 }
 
 void handleWallCollision(GenericCollidingChip *chip) {
-	float xx = fabs(chip->getDeltaX()) * sqrt(E);
-	float yy = fabs(chip->getDeltaY()) * sqrt(E);
+	float xx = fabs(chip->getDeltaX()) * sqrt(RESTITUTION_CONSTANT);
+	float yy = fabs(chip->getDeltaY()) * sqrt(RESTITUTION_CONSTANT);
 	if ((chip->getPositionX() + chip->getRadius()) > (board->getWidth() / 2)) {
 		chip->setDeltaX(-xx);
 	}
-    if ((chip->getPositionX() - chip->getRadius()) < -(board->getWidth() / 2)) {
-    	chip->setDeltaX(xx);
-    }
-    if ((chip->getPositionY() + chip->getRadius()) > (board->getHeight() / 2)) {
-    	chip->setDeltaY(-yy);
-    }
-    if ((chip->getPositionY() - chip->getRadius()) < -(board->getHeight() / 2)) {
-    	chip->setDeltaY(yy);
-    }
+	if ((chip->getPositionX() - chip->getRadius()) < -(board->getWidth() / 2)) {
+		chip->setDeltaX(xx);
+	}
+	if ((chip->getPositionY() + chip->getRadius()) > (board->getHeight() / 2)) {
+		chip->setDeltaY(-yy);
+	}
+	if ((chip->getPositionY() - chip->getRadius()) < -(board->getHeight() / 2)) {
+		chip->setDeltaY(yy);
+	}
 }
 
 void handlePocketEncompassing(Coin *coin) {
@@ -78,20 +102,20 @@ void handleChipCollision(GenericCollidingChip *first , GenericCollidingChip *sec
 	float vx1=first->getDeltaX()-m21*dvx2;
 	float vy1=first->getDeltaY()-a*m21*dvx2;
 
-	vx1=(vx1-vx_cm)*E + vx_cm;
-	vy1=(vy1-vy_cm)*E + vy_cm;
-	vx2=(vx2-vx_cm)*E + vx_cm;
-	vy2=(vy2-vy_cm)*E + vy_cm;
+	vx1=(vx1-vx_cm)*RESTITUTION_CONSTANT + vx_cm;
+	vy1=(vy1-vy_cm)*RESTITUTION_CONSTANT + vy_cm;
+	vx2=(vx2-vx_cm)*RESTITUTION_CONSTANT + vx_cm;
+	vy2=(vy2-vy_cm)*RESTITUTION_CONSTANT + vy_cm;
 
 	first->setDelta(vx1,vy1);
 	second->setDelta(vx2,vy2);
-  
+
 	return;
 }
 
 void handleFriction(GenericCollidingChip *chip) {
-	float vx = chip->getDeltaX() * MuMg;
-	float vy = chip->getDeltaY() * MuMg;
+	float vx = chip->getDeltaX() * LINEAR_FRICTIONAL_EFFECT;
+	float vy = chip->getDeltaY() * LINEAR_FRICTIONAL_EFFECT;
 	chip->setDelta(vx,vy);
 }
 
@@ -152,14 +176,40 @@ void update(int value) {
 		striker->reset();
 	}
 
+	if (CORRECT_STATE > COINS_COUNT / 2) {
+		ended = true;
+		won = true;
+	}
+
+	if (player->getScore() <= 0) {
+		ended = true;
+		lost = true;
+	}
+
 	glutTimerFunc(1, update, value + 1);
 }
 
 void drawScoreBoard() {
 	glPushMatrix();
-	std::string st = "Score : \n" + std::to_string(player->getScore());
+	std::string st;
 	glColor4f(1,1,1,1);
-	glRasterPos3f(7.5,-5,-14);
+	if (!ended) {
+		st = "Score : \n" + std::to_string(player->getScore());
+		glRasterPos3f(7.5,-5,-14);
+	} else {
+		if (lost) {
+			st = "You have disgraced your family.";
+		} else {
+			if (won) {
+				st = "You did not lose.";
+			} else {
+				st = "Paused. P to un-Pause. Y to Play Again. N to Quit.";		
+			}
+		}
+
+		glRasterPos3f(-7.5,-5,-14);
+	}
+
 	for (auto i = st.cbegin() ; i != st.cend() ; ++i) {
 		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *i);
 	}
@@ -174,19 +224,14 @@ void drawScene() {
 	glLoadIdentity();
 	glPushMatrix();
 	glTranslatef(0, 0, -15);
-
 	board->drawSelf();
-	
 	for (auto i = pockets.begin(); i != pockets.end(); ++i) {
 		(*i)->drawSelf();
 	}
-
 	striker->drawSelf();
-
 	for (auto i = coins.begin(); i != coins.end(); ++i) {
 		(*i)->drawSelf();
 	}
-
 	glPopMatrix();
 	drawScoreBoard();
 	glutSwapBuffers();
@@ -216,67 +261,150 @@ void handleResize(int w, int h) {
 }
 
 void handleKeypress(unsigned char key, int x, int y) {
-	if (key == ' ' or key == 'w' or key == 'W') {
-		striker->fire();
+#ifndef DEBUG
+	if (key == 'p' or key == 'P') {
+		ended = !ended;
 	}
+	if (!ended) {
+		if (key == ' ' or key == 'w' or key == 'W') {
+			striker->fire();
+		}
 
+		if (key == 'a' or key == 'A') {
+			striker->setAngle(1);
+		}
+
+		if (key == 'c' or key == 'C') {
+			striker->setAngle(-1);
+		}
+
+		if (key == 27) {
+			cleanUpItems();
+			exit(0);     // escape key is pressed
+		}
+	} else {
+		if (key == 'y' || key == 'Y') {
+			ended = 0;
+			refreshItems();
+		}
+
+		if (key == 'n' || key == 'N') {
+			cleanUpItems();
+			exit(0);
+		}
+	}
+#endif
+#ifdef DEBUG
+	if (key == 'w' or key == 'W') {
+		striker->setDelta(0,0.1);
+	}
 	if (key == 'a' or key == 'A') {
-		striker->setAngle(1);
+		striker->setDelta(-0.1,0);
 	}
-	
-	if (key == 'c' or key == 'C') {
-		striker->setAngle(-1);
+	if (key == 's' or key == 'S') {
+		striker->setDelta(0,-0.1);
 	}
-
-	if (key == 27) {
-		cleanUpItems();
-		exit(0);     // escape key is pressed
+	if (key == 'd' or key == 'D') {
+		striker->setDelta(0.1,0);
 	}
+#endif
 }
 
 void handleSpecialKeypress(int key, int x, int y) {
-	if (key == GLUT_KEY_UP) {
-		striker->setPower(0.01);
-	}
-	if (key == GLUT_KEY_DOWN) {
-		striker->setPower(-0.01);
-	}
-	if (key == GLUT_KEY_LEFT) {
-		for (auto i = coins.begin(); i != coins.end() ; ++i) {
-			while (striker->isColliding(**i)) {
-				striker->updatePositionX(-0.1);		
-			}
+	if (!ended and !striker->isFired()) {
+		if (key == GLUT_KEY_UP) {
+			striker->setPower(0.01);
 		}
-		striker->updatePositionX(-0.1);
-	}
-	if (key == GLUT_KEY_RIGHT) {
-		for (auto i = coins.begin(); i != coins.end() ; ++i) {
-			while (striker->isColliding(**i)) {
-				striker->updatePositionX(0.1);
-			}
+		if (key == GLUT_KEY_DOWN) {
+			striker->setPower(-0.01);
 		}
-		striker->updatePositionX(0.1);
+		if (key == GLUT_KEY_LEFT) {
+			for (auto i = coins.begin(); i != coins.end() ; ++i) {
+				while (striker->isColliding(**i)) {
+					striker->updatePositionX(-0.1);		
+				}
+			}
+			striker->updatePositionX(-0.1);
+		}
+		if (key == GLUT_KEY_RIGHT) {
+			for (auto i = coins.begin(); i != coins.end() ; ++i) {
+				while (striker->isColliding(**i)) {
+					striker->updatePositionX(0.1);
+				}
+			}
+			striker->updatePositionX(0.1);
+		}
 	}
 }
 
 void handleMouseclick(int button, int state, int x, int y) {
-	if (button == GLUT_LEFT_BUTTON and state == 0) {
-		striker->fire();
+	if (!ended and !striker->isFired()) {
+		float x1 = x - 450;
+		float a = 20 / (2.75 * 300);
+		x1=x1*a;
+		if(button == GLUT_RIGHT_BUTTON and state==GLUT_DOWN){
+			moveStriker=true;
+		}
+		if(button==GLUT_RIGHT_BUTTON and state==GLUT_UP){
+			moveStriker=false;
+		}
+		if(button==GLUT_RIGHT_BUTTON){
+			striker->setPositionX(x1);
+		}
+		if(button==GLUT_LEFT_BUTTON and state== GLUT_DOWN){
+			releaseStriker=true;
+		}
+		if(button==GLUT_LEFT_BUTTON and state == GLUT_UP){
+			releaseStriker=false;
+			striker->fire();
+		}
+	}
+}
+
+void dragHandler(int x, int y) {
+	if(!ended and !striker->isFired()){
+		float x1 = x - 450;
+		float y1 = y - 250;
+
+		float a = 20 / (2.75 * 300);
+
+		y1=y1*a*(-1);
+		x1=x1*a;
+
+		float xs = striker->getPositionX();
+		float ys = striker->getPositionY();
+
+		if(moveStriker) {
+			striker->updatePositionX(x);	
+			moveStriker=true;
+		}
+
+		if(releaseStriker){
+			float theta;
+			float theta2;
+			theta = atan2((y1-ys),(x1-xs));
+			theta2= theta*180*M_1_PI;
+			striker->setPower(sqrt((xs-x1) * (xs-x1) + (ys-y1) * (ys-y1)));
+			striker->setAngle(theta2);
+		}
+		glutPostRedisplay();
 	}
 }
 
 void timer_start(std::function<void(void)> func, unsigned int interval) {
-    std::thread([func, interval]() {
-        while (true) {
-            func();
-            std::this_thread::sleep_for(std::chrono::milliseconds(interval));
-        }
-    }).detach();
+	std::thread([func, interval]() {
+			while (true) {
+			func();
+			std::this_thread::sleep_for(std::chrono::milliseconds(interval));
+			}
+			}).detach();
 }
 
 
 void decrementScore() {
-    player->setScore(player->getScore() - 1);
+	if (!ended) {
+		player->setScore(player->getScore() - 1);
+	}
 }
 
 int main(int argc, char **argv) {
@@ -304,6 +432,7 @@ int main(int argc, char **argv) {
 	glutSpecialFunc(handleSpecialKeypress);
 	glutMouseFunc(handleMouseclick);
 	glutReshapeFunc(handleResize);
+	glutMotionFunc(dragHandler);
 	glutTimerFunc(1, update, 0);
 	timer_start(decrementScore,5000);
 	glutMainLoop();
