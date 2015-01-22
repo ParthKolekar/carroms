@@ -6,8 +6,6 @@ std::array<Pocket *, 4> pockets;
 std::vector<Coin *> coins;
 Player *player;
 int STATE;
-bool win = false;
-bool lost = false;
 
 void initItems() {
 	STATE = 0;
@@ -154,12 +152,7 @@ void update(int value) {
 		striker->reset();
 	}
 
-	if (player->getScore() <= 0) {
-		lost = true;
-		drawLostScreen();
-	} else { 
-		glutTimerFunc(1, update, value + 1);
-	}
+	glutTimerFunc(1, update, value + 1);
 }
 
 void drawScoreBoard() {
@@ -172,18 +165,6 @@ void drawScoreBoard() {
 	}
 	glPopMatrix();
 }
-
-void drawLostScreen() {
-	glPushMatrix();
-	std::string st = "You Have Fallen";
-	glColor4f(1,1,1,1);
-	glRasterPos3f(0,0,-14);
-	for (auto i = st.cbegin() ; i != st.cend() ; ++i) {
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *i);
-	}
-	glPopMatrix();
-}
-
 
 // Function to draw objects on the screen
 void drawScene() {
@@ -247,11 +228,6 @@ void handleKeypress(unsigned char key, int x, int y) {
 		striker->setAngle(-1);
 	}
 
-	if ((key == 'r' or key == 'R') and (!lost or !win)) {
-		cleanUpItems();
-		initItems();
-	}
-
 	if (key == 27) {
 		cleanUpItems();
 		exit(0);     // escape key is pressed
@@ -284,6 +260,9 @@ void handleSpecialKeypress(int key, int x, int y) {
 }
 
 void handleMouseclick(int button, int state, int x, int y) {
+	if (button == GLUT_LEFT_BUTTON and state == 0) {
+		striker->fire();
+	}
 }
 
 void timer_start(std::function<void(void)> func, unsigned int interval) {

@@ -30,5 +30,3 @@ extern Player *player;
 #define MuMg 0.99
 #endif
 
-
-void drawLostScreen();
