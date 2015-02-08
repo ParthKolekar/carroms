@@ -271,11 +271,11 @@ void handleKeypress(unsigned char key, int x, int y) {
 		}
 
 		if (key == 'a' or key == 'A') {
-			striker->setAngle(1);
+			striker->updateAngle(1);
 		}
 
 		if (key == 'c' or key == 'C') {
-			striker->setAngle(-1);
+			striker->updateAngle(-1);
 		}
 
 		if (key == 27) {
@@ -313,10 +313,10 @@ void handleKeypress(unsigned char key, int x, int y) {
 void handleSpecialKeypress(int key, int x, int y) {
 	if (!ended and !striker->isFired()) {
 		if (key == GLUT_KEY_UP) {
-			striker->setPower(0.01);
+			striker->updatePower(0.01);
 		}
 		if (key == GLUT_KEY_DOWN) {
-			striker->setPower(-0.01);
+			striker->updatePower(-0.01);
 		}
 		if (key == GLUT_KEY_LEFT) {
 			for (auto i = coins.begin(); i != coins.end() ; ++i) {

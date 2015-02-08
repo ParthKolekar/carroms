@@ -11,7 +11,7 @@ Striker::Striker() {
 	this->positionY = -10/2.75;
 	this->mass = 1;
 	this->angle = 90;
-	this->power = 0.3;
+	this->power = 0.1;
 	this->fired = false;
 }
 
