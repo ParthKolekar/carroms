@@ -3,15 +3,15 @@ override CFLAGS += -Ofast -funroll-loops -flto -Wall -std=c++11
 override DEVEL_FLAGS += -g -Wall -Wextra -pedantic-errors -std=c++11 
 override DEBUG_FLAGS += -DDEBUG
 override LFLAGS += -lglut -lGL -lGLU
-CC = g++
+CXX ?= g++
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
 
 %.o : %.cpp
-	$(CC) $(DEVEL_FLAGS) -c $^
+	$(CXX) $(DEVEL_FLAGS) -c $^
 
 $(OBJ) : *.o
-	$(CC) $(DEVEL_FLAGS) $^ -o $@ $(LFLAGS)
+	$(CXX) $(DEVEL_FLAGS) $^ -o $@ $(LFLAGS)
 
 clean :
 	rm -f *.o $(OBJ)
@@ -19,12 +19,12 @@ clean :
 clear : clean
 
 debug: clear
-	$(CC) $(DEVEL_FLAGS) $(DEBUG_FLAGS) -c *.cpp
-	$(CC) $(DEVEL_FLAGS) $(DEBUG_FLAGS) -o $(OBJ) *.o $(LFLAGS)
+	$(CXX) $(DEVEL_FLAGS) $(DEBUG_FLAGS) -c *.cpp
+	$(CXX) $(DEVEL_FLAGS) $(DEBUG_FLAGS) -o $(OBJ) *.o $(LFLAGS)
 
 ofast : clear
-	$(CC) $(CFLAGS) -c *.cpp
-	$(CC) $(CFLAGS) -o $(OBJ) *.o $(LFLAGS)
+	$(CXX) $(CFLAGS) -c *.cpp
+	$(CXX) $(CFLAGS) -o $(OBJ) *.o $(LFLAGS)
 
 install : $(OBJ)
 	@echo "Installing program to $(DESTDIR)$(BINDIR) ..."
