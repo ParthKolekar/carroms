@@ -14,12 +14,14 @@
 #include "Pocket.h"
 #include "GenericCollidingChip.h"
 #include "Player.h"
+#include "Particles.h"
 
 extern BoundingBoard *board;
 extern Striker *striker;
 extern std::array<Pocket * , 4> pockets;
 extern std::vector<Coin *> coins;
 extern Player *player;
+extern std::vector<Particles *> particles;
 
 
 #ifndef RESTITUTION_CONSTANT

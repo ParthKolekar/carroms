@@ -5,6 +5,7 @@ Striker *striker;
 std::array<Pocket *, 4> pockets;
 std::vector<Coin *> coins;
 Player *player;
+std::vector<Particles *> particles;
 int STATE;
 int CORRECT_STATE;
 bool ended;
@@ -35,10 +36,14 @@ void refreshItems() {
 	STATE = 0;
 	CORRECT_STATE = 0;
 	striker->reset();
-	for (auto i = coins.begin(); i != coins.end(); ++i) {
+	for (auto i = coins.begin(); i != coins.end(); i++) {
 		delete *i;
 	}
 	coins.clear();
+	for (auto i = particles.begin(); i != particles.end(); i++) {
+		delete *i;
+	}
+	particles.clear();
 	coins.push_back(new Coin(2,0,0));
 	for(int i = 0 , j = 0 ; i <= 360 ; i += (360 / COINS_COUNT) , j=j^1 ) {
 		coins.push_back(new Coin(j, SPACING_RADIUS * cos ( M_PI * i / 180),  SPACING_RADIUS * sin ( M_PI * i / 180)));
@@ -54,12 +59,15 @@ void handleWallCollision(GenericCollidingChip *chip) {
 	}
 	if ((chip->getPositionX() - chip->getRadius()) < -(board->getWidth() / 2)) {
 		chip->setDeltaX(xx);
+		
 	}
 	if ((chip->getPositionY() + chip->getRadius()) > (board->getHeight() / 2)) {
 		chip->setDeltaY(-yy);
+		
 	}
 	if ((chip->getPositionY() - chip->getRadius()) < -(board->getHeight() / 2)) {
 		chip->setDeltaY(yy);
+
 	}
 }
 
@@ -86,7 +94,7 @@ void handleChipCollision(GenericCollidingChip *first , GenericCollidingChip *sec
 	fy21=1.0E-12*fabs(y21);
 
 	if ( fabs(x21)<fy21 ) {  
-		int sign;
+		int sign; // handy hack to compute for given orientations
 		if (x21<0) { 
 			sign=-1; 
 		} else { 
@@ -110,6 +118,37 @@ void handleChipCollision(GenericCollidingChip *first , GenericCollidingChip *sec
 	first->setDelta(vx1,vy1);
 	second->setDelta(vx2,vy2);
 
+	float collisionPointX = ((first->getPositionX() * second->getRadius()) + (second->getPositionX() * first->getRadius()))  / (first->getRadius() + second->getRadius());
+	float collisionPointY = ((first->getPositionY() * second->getRadius()) + (second->getPositionY() * first->getRadius())) / (first->getRadius() + second->getRadius());
+
+	particles.push_back(new Particles(collisionPointX, collisionPointY, vx_cm, vy_cm));
+
+	float px = first->getDeltaX() * cos(M_PI / 180) - first->getDeltaY() * sin(M_PI / 180);
+	float py = first->getDeltaX() * sin(M_PI / 180) + first->getDeltaY() * cos(M_PI / 180);
+	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
+	px = px * cos(M_PI / 180) - py * sin(M_PI / 180);
+	py = px * sin(M_PI / 180) + py * cos(M_PI / 180);
+	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
+	px = first->getDeltaX() * cos(M_PI / 180) + first->getDeltaY() * sin(M_PI / 180);
+	py = first->getDeltaY() * cos(M_PI / 180) - first->getDeltaX() * sin(M_PI / 180);
+	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
+	px = px * cos(M_PI / 180) + py * sin(M_PI / 180);
+	py = py * cos(M_PI / 180) - px * sin(M_PI / 180);
+	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
+
+	px = second->getDeltaX() * cos(M_PI / 180) - second->getDeltaY() * sin(M_PI / 180);
+	py = second->getDeltaX() * sin(M_PI / 180) + second->getDeltaY() * cos(M_PI / 180);
+	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
+	px = px * cos(M_PI / 180) - py * sin(M_PI / 180);
+	py = px * sin(M_PI / 180) + py * cos(M_PI / 180);
+	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
+	px = second->getDeltaX() * cos(M_PI / 180) + second->getDeltaY() * sin(M_PI / 180);
+	py = second->getDeltaY() * cos(M_PI / 180) - second->getDeltaX() * sin(M_PI / 180);
+	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
+	px = px * cos(M_PI / 180) + py * sin(M_PI / 180);
+	py = py * cos(M_PI / 180) - px * sin(M_PI / 180);
+	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
+
 	return;
 }
 
@@ -122,17 +161,20 @@ void handleFriction(GenericCollidingChip *chip) {
 void cleanUpItems() {
 	delete board;
 	delete striker;
-	for (auto i = pockets.begin(); i != pockets.end(); ++i) {
+	for (auto i = pockets.begin(); i != pockets.end(); i++) {
 		delete *i;
 	}
-	for (auto i = coins.begin(); i != coins.end(); ++i) {
+	for (auto i = coins.begin(); i != coins.end(); i++) {
+		delete *i;
+	}
+	for (auto i = particles.begin(); i != particles.end(); i++) {
 		delete *i;
 	}
 }
 
 void update(int value) {
 	bool flag = true;
-	for (auto i = coins.begin(); i != coins.end(); ++i) {
+	for (auto i = coins.begin(); i != coins.end(); i++) {
 		if (board->isColliding(**i))
 			handleWallCollision(*i);
 		if (striker->isColliding(**i))
@@ -159,7 +201,7 @@ void update(int value) {
 		handleWallCollision(striker);
 	}
 	handleFriction(striker);
-	for (auto i = pockets.begin(); i != pockets.end(); ++i) {
+	for (auto i = pockets.begin(); i != pockets.end(); i++) {
 		if ((*i)->isFullyEncompassing(*striker)) {
 			striker->reset();
 			player->updateScore(-5);
@@ -169,7 +211,10 @@ void update(int value) {
 		flag = false;
 	}
 	striker->moveNext();
-	for (auto i = coins.begin(); i != coins.end(); ++i) {
+	for (auto i = coins.begin(); i != coins.end(); i++) {
+		(*i)->moveNext();
+	}
+	for (auto i = particles.begin(); i != particles.end(); i++) {
 		(*i)->moveNext();
 	}
 	if (flag and striker->isFired()) {
@@ -198,7 +243,7 @@ void drawScoreBoard() {
 		glRasterPos3f(7.5,-5,-14);
 	} else {
 		if (lost) {
-			st = "You have disgraced your family.";
+			st = "You have disgraced your family. Play Again? (y/n)";
 		} else {
 			if (won) {
 				st = "You did not lose.";
@@ -210,7 +255,7 @@ void drawScoreBoard() {
 		glRasterPos3f(-7.5,-5,-14);
 	}
 
-	for (auto i = st.cbegin() ; i != st.cend() ; ++i) {
+	for (auto i = st.cbegin() ; i != st.cend() ; i++) {
 		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *i);
 	}
 	glPopMatrix();
@@ -225,11 +270,14 @@ void drawScene() {
 	glPushMatrix();
 	glTranslatef(0, 0, -15);
 	board->drawSelf();
-	for (auto i = pockets.begin(); i != pockets.end(); ++i) {
+	for (auto i = pockets.begin(); i != pockets.end(); i++) {
 		(*i)->drawSelf();
 	}
 	striker->drawSelf();
-	for (auto i = coins.begin(); i != coins.end(); ++i) {
+	for (auto i = coins.begin(); i != coins.end(); i++) {
+		(*i)->drawSelf();
+	}
+	for (auto i = particles.begin(); i != particles.end(); i++) {
 		(*i)->drawSelf();
 	}
 	glPopMatrix();
@@ -319,7 +367,7 @@ void handleSpecialKeypress(int key, int x, int y) {
 			striker->updatePower(-0.01);
 		}
 		if (key == GLUT_KEY_LEFT) {
-			for (auto i = coins.begin(); i != coins.end() ; ++i) {
+			for (auto i = coins.begin(); i != coins.end() ; i++) {
 				while (striker->isColliding(**i)) {
 					striker->updatePositionX(-0.1);		
 				}
@@ -327,7 +375,7 @@ void handleSpecialKeypress(int key, int x, int y) {
 			striker->updatePositionX(-0.1);
 		}
 		if (key == GLUT_KEY_RIGHT) {
-			for (auto i = coins.begin(); i != coins.end() ; ++i) {
+			for (auto i = coins.begin(); i != coins.end() ; i++) {
 				while (striker->isColliding(**i)) {
 					striker->updatePositionX(0.1);
 				}

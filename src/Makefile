@@ -6,12 +6,14 @@ override LFLAGS += -lglut -lGL -lGLU
 CXX ?= g++
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
+CXXFILES = BoundingBoard.cpp Coin.cpp GenericCollidingChip.cpp GenericObject.cpp main.cpp Particles.cpp Player.cpp Pocket.cpp Striker.cpp
+OBJFILES = $(patsubst %.cpp,%.o,$(CXXFILES))
+
+$(OBJ) : $(OBJFILES)
+	$(CXX) $(DEVEL_FLAGS) $^ -o $@ $(LFLAGS)
 
 %.o : %.cpp
 	$(CXX) $(DEVEL_FLAGS) -c $^
-
-$(OBJ) : *.o
-	$(CXX) $(DEVEL_FLAGS) $^ -o $@ $(LFLAGS)
 
 clean :
 	rm -f *.o $(OBJ)
@@ -19,12 +21,12 @@ clean :
 clear : clean
 
 debug: clear
-	$(CXX) $(DEVEL_FLAGS) $(DEBUG_FLAGS) -c *.cpp
-	$(CXX) $(DEVEL_FLAGS) $(DEBUG_FLAGS) -o $(OBJ) *.o $(LFLAGS)
+	$(CXX) $(DEVEL_FLAGS) $(DEBUG_FLAGS) -c $(CXXFILES)
+	$(CXX) $(DEVEL_FLAGS) $(DEBUG_FLAGS) -o $(OBJ) $(OBJFILES) $(LFLAGS)
 
 ofast : clear
-	$(CXX) $(CFLAGS) -c *.cpp
-	$(CXX) $(CFLAGS) -o $(OBJ) *.o $(LFLAGS)
+	$(CXX) $(CFLAGS) -c $(CXXFILES)
+	$(CXX) $(CFLAGS) -o $(OBJ) $(OBJFILES) $(LFLAGS)
 
 install : $(OBJ)
 	@echo "Installing program to $(DESTDIR)$(BINDIR) ..."

@@ -25,7 +25,7 @@ void Striker::reset() {
 	this->positionX = 0;
 	this->positionY = -10/2.75;
 	this->angle = 90;
-	this->power = 0.3;
+	this->power = 0.1;
 	this->fired = false;
 
 }
