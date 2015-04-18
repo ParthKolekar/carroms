@@ -56,18 +56,71 @@ void handleWallCollision(GenericCollidingChip *chip) {
 	float yy = fabs(chip->getDeltaY()) * sqrt(RESTITUTION_CONSTANT);
 	if ((chip->getPositionX() + chip->getRadius()) > (board->getWidth() / 2)) {
 		chip->setDeltaX(-xx);
+		particles.push_back(new Particles(chip->getPositionX() + chip->getRadius(), chip->getPositionY(), xx, yy));
+
+		float px = xx;
+		float py = yy;
+		particles.push_back(new Particles(chip->getPositionX() + chip->getRadius(), chip->getPositionY(), px, py));
+		px = px * cos(M_PI / 2) - py * sin(M_PI / 2);
+		py = px * sin(M_PI / 2) + py * cos(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX() + chip->getRadius(), chip->getPositionY(), px, py));
+		px = chip->getDeltaX() * cos(M_PI / 2) + chip->getDeltaY() * sin(M_PI / 2);
+		py = chip->getDeltaY() * cos(M_PI / 2) - chip->getDeltaX() * sin(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX() + chip->getRadius(), chip->getPositionY(), px, py));
+		px = px * cos(M_PI / 2) + py * sin(M_PI / 2);
+		py = py * cos(M_PI / 2) - px * sin(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX() + chip->getRadius(), chip->getPositionY(), px, py));
 	}
 	if ((chip->getPositionX() - chip->getRadius()) < -(board->getWidth() / 2)) {
 		chip->setDeltaX(xx);
-		
+		particles.push_back(new Particles(chip->getPositionX() - chip->getRadius(), chip->getPositionY(), xx, yy));
+
+		float px = xx;
+		float py = yy;
+		particles.push_back(new Particles(chip->getPositionX() - chip->getRadius(), chip->getPositionY(), px, py));
+		px = px * cos(M_PI / 2) - py * sin(M_PI / 2);
+		py = px * sin(M_PI / 2) + py * cos(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX() - chip->getRadius(), chip->getPositionY(), px, py));
+		px = chip->getDeltaX() * cos(M_PI / 2) + chip->getDeltaY() * sin(M_PI / 2);
+		py = chip->getDeltaY() * cos(M_PI / 2) - chip->getDeltaX() * sin(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX() - chip->getRadius(), chip->getPositionY(), px, py));
+		px = px * cos(M_PI / 2) + py * sin(M_PI / 2);
+		py = py * cos(M_PI / 2) - px * sin(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX() - chip->getRadius(), chip->getPositionY(), px, py));
 	}
 	if ((chip->getPositionY() + chip->getRadius()) > (board->getHeight() / 2)) {
 		chip->setDeltaY(-yy);
-		
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() + chip->getRadius() , xx, yy));
+
+		float px = xx;
+		float py = yy;
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() + chip->getRadius() , px, py));
+		px = px * cos(M_PI / 2) - py * sin(M_PI / 2);
+		py = px * sin(M_PI / 2) + py * cos(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() + chip->getRadius() , px, py));
+		px = chip->getDeltaX() * cos(M_PI / 2) + chip->getDeltaY() * sin(M_PI / 2);
+		py = chip->getDeltaY() * cos(M_PI / 2) - chip->getDeltaX() * sin(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() + chip->getRadius() , px, py));
+		px = px * cos(M_PI / 2) + py * sin(M_PI / 2);
+		py = py * cos(M_PI / 2) - px * sin(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() + chip->getRadius() , px, py));
 	}
 	if ((chip->getPositionY() - chip->getRadius()) < -(board->getHeight() / 2)) {
 		chip->setDeltaY(yy);
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() - chip->getRadius() , xx, yy));
 
+		float px = xx;
+		float py = yy;
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() - chip->getRadius() , px, py));
+		px = px * cos(M_PI / 2) - py * sin(M_PI / 2);
+		py = px * sin(M_PI / 2) + py * cos(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() - chip->getRadius() , px, py));
+		px = chip->getDeltaX() * cos(M_PI / 2) + chip->getDeltaY() * sin(M_PI / 2);
+		py = chip->getDeltaY() * cos(M_PI / 2) - chip->getDeltaX() * sin(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() - chip->getRadius() , px, py));
+		px = px * cos(M_PI / 2) + py * sin(M_PI / 2);
+		py = py * cos(M_PI / 2) - px * sin(M_PI / 2);
+		particles.push_back(new Particles(chip->getPositionX(), chip->getPositionY() - chip->getRadius() , px, py));
 	}
 }
 
@@ -123,30 +176,30 @@ void handleChipCollision(GenericCollidingChip *first , GenericCollidingChip *sec
 
 	particles.push_back(new Particles(collisionPointX, collisionPointY, vx_cm, vy_cm));
 
-	float px = first->getDeltaX() * cos(M_PI / 180) - first->getDeltaY() * sin(M_PI / 180);
-	float py = first->getDeltaX() * sin(M_PI / 180) + first->getDeltaY() * cos(M_PI / 180);
+	float px = first->getDeltaX() * cos(M_PI / 2) - first->getDeltaY() * sin(M_PI / 2);
+	float py = first->getDeltaX() * sin(M_PI / 2) + first->getDeltaY() * cos(M_PI / 2);
 	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
-	px = px * cos(M_PI / 180) - py * sin(M_PI / 180);
-	py = px * sin(M_PI / 180) + py * cos(M_PI / 180);
+	px = px * cos(M_PI / 2) - py * sin(M_PI / 2);
+	py = px * sin(M_PI / 2) + py * cos(M_PI / 2);
 	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
-	px = first->getDeltaX() * cos(M_PI / 180) + first->getDeltaY() * sin(M_PI / 180);
-	py = first->getDeltaY() * cos(M_PI / 180) - first->getDeltaX() * sin(M_PI / 180);
+	px = first->getDeltaX() * cos(M_PI / 2) + first->getDeltaY() * sin(M_PI / 2);
+	py = first->getDeltaY() * cos(M_PI / 2) - first->getDeltaX() * sin(M_PI / 2);
 	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
-	px = px * cos(M_PI / 180) + py * sin(M_PI / 180);
-	py = py * cos(M_PI / 180) - px * sin(M_PI / 180);
+	px = px * cos(M_PI / 2) + py * sin(M_PI / 2);
+	py = py * cos(M_PI / 2) - px * sin(M_PI / 2);
 	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
 
-	px = second->getDeltaX() * cos(M_PI / 180) - second->getDeltaY() * sin(M_PI / 180);
-	py = second->getDeltaX() * sin(M_PI / 180) + second->getDeltaY() * cos(M_PI / 180);
+	px = second->getDeltaX() * cos(M_PI / 2) - second->getDeltaY() * sin(M_PI / 2);
+	py = second->getDeltaX() * sin(M_PI / 2) + second->getDeltaY() * cos(M_PI / 2);
 	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
-	px = px * cos(M_PI / 180) - py * sin(M_PI / 180);
-	py = px * sin(M_PI / 180) + py * cos(M_PI / 180);
+	px = px * cos(M_PI / 2) - py * sin(M_PI / 2);
+	py = px * sin(M_PI / 2) + py * cos(M_PI / 2);
 	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
-	px = second->getDeltaX() * cos(M_PI / 180) + second->getDeltaY() * sin(M_PI / 180);
-	py = second->getDeltaY() * cos(M_PI / 180) - second->getDeltaX() * sin(M_PI / 180);
+	px = second->getDeltaX() * cos(M_PI / 2) + second->getDeltaY() * sin(M_PI / 2);
+	py = second->getDeltaY() * cos(M_PI / 2) - second->getDeltaX() * sin(M_PI / 2);
 	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
-	px = px * cos(M_PI / 180) + py * sin(M_PI / 180);
-	py = py * cos(M_PI / 180) - px * sin(M_PI / 180);
+	px = px * cos(M_PI / 2) + py * sin(M_PI / 2);
+	py = py * cos(M_PI / 2) - px * sin(M_PI / 2);
 	particles.push_back(new Particles(collisionPointX, collisionPointY, px, py));
 
 	return;
