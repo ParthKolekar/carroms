@@ -228,6 +228,11 @@ void cleanUpItems() {
 void update(int value) {
 	bool flag = true;
 	for (auto i = coins.begin(); i != coins.end(); i++) {
+		for (auto j = pockets.begin(); j != pockets.end(); ++j) {
+			if ((*j)->isFullyEncompassing(**i)) {
+				handlePocketEncompassing(*i);
+			}
+		}
 		if (board->isColliding(**i))
 			handleWallCollision(*i);
 		if (striker->isColliding(**i))
@@ -237,11 +242,6 @@ void update(int value) {
 				handleChipCollision(*i,*j);
 		}
 		handleFriction(*i);
-		for (auto j = pockets.begin(); j != pockets.end(); ++j) {
-			if ((*j)->isFullyEncompassing(**i)) {
-				handlePocketEncompassing(*i);
-			}
-		}
 		if (!(*i)->isStopped()) {
 			flag = false;
 			continue;
@@ -250,16 +250,16 @@ void update(int value) {
 			continue;
 		}
 	}
-	if (board->isColliding(*striker)) {
-		handleWallCollision(striker);
-	}
-	handleFriction(striker);
 	for (auto i = pockets.begin(); i != pockets.end(); i++) {
 		if ((*i)->isFullyEncompassing(*striker)) {
 			striker->reset();
 			player->updateScore(-5);
 		}
 	}
+	if (board->isColliding(*striker)) {
+		handleWallCollision(striker);
+	}
+	handleFriction(striker);
 	if (!(striker->isStopped())) {
 		flag = false;
 	}
