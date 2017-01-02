@@ -1,8 +1,8 @@
 OBJ = carrom
-override CFLAGS += -Ofast -funroll-loops -flto -Wall -std=c++11
+override CFLAGS += -Ofast -funroll-loops -flto -Wall -std=c++11 -static
 override DEVEL_FLAGS += -g -Wall -Wextra -pedantic-errors -std=c++11 
 override DEBUG_FLAGS += -DDEBUG
-override LFLAGS += -lglut -lGL -lGLU
+override LFLAGS += -lglut -lGL -lGLU -lpthread
 CXX ?= g++
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
